@@ -24,29 +24,62 @@ app.post('/webhook', (req, res) => {
   const body = req.body;
   console.log("BODY: ");
   console.log(body);
-  //API.registerUser("Test User", "LastName", "testEmail@domain.com");
-  //API.getUserRating(1);
-  //API.submitResult(1,2);
-  API.undoResult(1,2);
-  setTimeout(() => {API.getUserRating(1);}, 3000);
-  if (body.object === 'page') {
-    // Iterate over each entry
-    // There may be multiple if batched
-    if (body.entry && body.entry.length <= 0){
-      return;
+
+  if(body.field === 'feed'){
+    var msg = body.value.message;
+    console.log("Message:");
+    console.log(msg);
+    //Parse the feed to find out what API call to make
+    if(/!rating/.test(msg)){
+      handleRatingRequest(body.value.from);
     }
-    body.entry.forEach((pageEntry) => {
-      // Iterate over each messaging event and handle accordingly
-      pageEntry.messaging.forEach((messagingEvent) => {
-        console.log({messagingEvent});
-        handleMessage(messagingEvent.sender.id, messagingEvent);
-      });
-    });
-  }
-  else if(body.field === 'feed'){
-    console.log("FEED RECIEVED");
+    else if(/!register/.test(msg)){
+      handleRegister(msg, body.value.from);
+    }
+    else if(/!result\s(.*?)def\s(.*)/.test(msg)){
+      handleResult(msg);
+    }
+    else if(/!undo\s(.*?)def\s(.*)/.test(msg)){
+      handleUndo(msg, body.value.from.id)
+    }
   }
 });
+
+function handleRatingRequest(from){
+  //{ name: 'Test Page', id: '1067280970047460' } } }
+  API.getUserRating(from.id, (response) => {
+    console.log("Hi " + from.name + " " + response);
+  });
+}
+
+function handleRegister(from){
+  //{ name: 'Test Page', id: '1067280970047460' } } }
+  //Call the Users API to get the users information to register
+  API.getUserInformationFromFacebook(from.id, (user) => {
+    console.log("Now Registering that user in the system");
+    //Using the returned data, register them with the system.
+    API.registerUser(user, (response) => {
+     console.log("Hi " + user.firstName + " welcome to the elo system");
+   });
+  });
+}
+
+function handleResult(msg){
+  let match = msg.match(/!result\s(.*?)def\s(.*)/);
+  let winner = match[1];
+  let loser = match[2];
+  API.submitResult(winner, loser, () =>{
+    console.log("Result Submited");
+  });
+}
+
+function handleUndo(msg, posterId){
+  let match = msg.match(/!undo\s(.*?)def\s(.*)/);
+  let winner = match[1];
+  let loser = match[2];
+  API.undoResult(posterId, winner, loser);
+}
+
 
 // Accepts GET requests at the /webhook endpoint
 app.get('/webhook', (req, res) => {
@@ -75,6 +108,8 @@ app.get('/webhook', (req, res) => {
     }
   }
 });
+
+
 
 function handleMessage(sender_psid, message) {
   // check if it is a location message
