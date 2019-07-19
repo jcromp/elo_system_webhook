@@ -14,3 +14,12 @@ Body:
 
 
 Any message to the bot will appear in the "Heroku logs" output.
+
+
+To post to the page use
+curl -i -X POST \
+ "https://graph.facebook.com/v3.3/1028040704061187/feed?message=Hello%20World!&access_token=EAADB2iCJOGEBAAfVr6dDzTVdpIsgLraCsyeaeWiFLZCIzPx39rLzkltt4kRP7w0mNeZCTbQjkkdGNZBNQjSMqofzOGsqC9BZCZB35KjyLboovNpZBxrLyxxkQcYSpVROoCNPMHGB3RLQ5v6esCv2zeeZB5reOouwaexUTAghkZCScE5KLnfaj98NThsytG58pexmxVLCZCqmrOgZDZD"
+ 
+ To get all the posts use:
+ curl -i -X GET \
+ "https://graph.facebook.com/v3.3/1028040704061187/feed?access_token=EAADB2iCJOGEBAAfVr6dDzTVdpIsgLraCsyeaeWiFLZCIzPx39rLzkltt4kRP7w0mNeZCTbQjkkdGNZBNQjSMqofzOGsqC9BZCZB35KjyLboovNpZBxrLyxxkQcYSpVROoCNPMHGB3RLQ5v6esCv2zeeZB5reOouwaexUTAghkZCScE5KLnfaj98NThsytG58pexmxVLCZCqmrOgZDZD"
