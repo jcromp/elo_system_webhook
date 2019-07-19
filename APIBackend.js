@@ -9,18 +9,6 @@ var AXIOS = axios.create({
 
 
 module.exports = {
-	callApi: function (){
-		console.log("Called Function");
-
-		// AXIOS({
-		//   method: 'get',
-		//   url: 'http://bit.ly/2mTM3nY'
-		// })
-		//   .then(function (response) {
-		//  		console.log("Respionse Reveived");
-		//     console.log(response);
-		//   });
-	},
 	registerUser: function(user, callback){
 		AXIOS.post('/player', user)
 		.then(function(response){
@@ -39,54 +27,39 @@ module.exports = {
 		    console.log(error);
 	  	});
 	},
-	submitResult: function(winnerName, loserName){
+	submitResult: function(winnerName, loserName, callback){
 		const match = {
 			winner: winnerName,
 			loser: loserName
 		}
 		AXIOS.post('/match/result', match)
 		.then(function(response){
-			console.log(response.data);
+			callback("Thanks. Results registered.");
 		})
 		.catch(function (error) {
-		    console.log(error);
+			if(error.response.status == '404'){
+				let msg = "Sorry. " + error.response.data.errors[0];
+		    	callback(msg);
+			}
 	  	});
 	},
-	undoResult: function(posterId, winnerName, loserName){
+	undoResult: function(posterId, winnerName, loserName, callback){
 		const match = {
 			winner: winnerName,
 			loser: loserName
 		}
 		AXIOS.post('/match/undo?id='+posterId, match)
 		.then(function(response){
-			console.log(response.data);
+			callback(response.data);
 		})
 		.catch(function (error) {
-		    console.log(error);
-	  	});
-	},
-	getUserInformationFromFacebook: function(facebookId, callback){
-		AXIOS({
-		  method: 'get',
-		  url: 'https://graph.facebook.com/v3.3/2438876172906024?fields=id%2Cfirst_name%2Clast_name%2Cemail&access_token=',
-		  params: {
-		    fields: 'first_name,last_name,email',
-		    access_token: ACCESS_TOKEN
-		  }
-		})
-		.then(function(response){
-			var user = {
-				firstName: response.data.first_name,
-				lastName: response.data.last_name,
-				email: response.data.email,
-				facebookId: response.data.id
-			};
-			console.log("Converted FB Data into user:");
-			console.log(user);
-			callback(user);
-		})
-		.catch(function (error) {
-		    console.log(error);
+			if(error.response.status == '404'){
+				let msg = "Sorry. " + error.response.data.errors[0];
+				callback(msg);
+			}
+			else if(error.response.status =='401'){
+				callback("Only administrators can undo matches. Please contact an administrator.");
+			}
 	  	});
 	}
 }

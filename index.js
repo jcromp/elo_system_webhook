@@ -5,8 +5,8 @@ const
   request = require('request'),
   express = require('express'),
   body_parser = require('body-parser'),
-  API = require('./API'),
-
+  APIBackend = require('./APIBackend'),
+  APIFacebook = require('./APIFacebook'),
 
   app = express().use(body_parser.json()); // creates express http server
 
@@ -22,22 +22,18 @@ app.post('/webhook', (req, res) => {
   res.status(200).send('EVENT_RECEIVED');
 
   const body = req.body;
-  console.log("BODY: ");
-  console.log(body);
 
   if(body.field === 'feed'){
     var msg = body.value.message;
-    console.log("Message:");
-    console.log(msg);
     //Parse the feed to find out what API call to make
     if(/!rating/.test(msg)){
-      handleRatingRequest(body.value.from);
+      handleRatingRequest(body.value);
     }
     else if(/!register/.test(msg)){
-      handleRegister(msg, body.value.from);
+      handleRegister(body.value);
     }
     else if(/!result\s(.*?)def\s(.*)/.test(msg)){
-      handleResult(msg);
+      handleResult(body.value);
     }
     else if(/!undo\s(.*?)def\s(.*)/.test(msg)){
       handleUndo(msg, body.value.from.id)
@@ -45,31 +41,42 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-function handleRatingRequest(from){
-  //{ name: 'Test Page', id: '1067280970047460' } } }
-  API.getUserRating(from.id, (response) => {
-    console.log("Hi " + from.name + " " + response);
+function handleRatingRequest(value){
+  /*
+value:
+   { item: 'status',
+     post_id: '44444444_444444444',
+     verb: 'add',
+     published: 1,
+     created_time: 1563536564,
+     message: '!rating.',
+     from: { name: 'Test Page', id: '1067280970047460' } } }
+  */  
+  APIBackend.getUserRating(value.from.id, (response) => {
+    let message = "Hi " + value.from.name + " " + response;
+    APIFacebook.postComment(value.post_id, message);
   });
 }
 
-function handleRegister(from){
-  //{ name: 'Test Page', id: '1067280970047460' } } }
+function handleRegister(value){
   //Call the Users API to get the users information to register
-  API.getUserInformationFromFacebook(from.id, (user) => {
+  APIFacebook.getUserInformationFromFacebook(value.from.id, (user) => {
     console.log("Now Registering that user in the system");
     //Using the returned data, register them with the system.
-    API.registerUser(user, (response) => {
-     console.log("Hi " + user.firstName + " welcome to the elo system");
+    APIBackend.registerUser(user, (response) => {
+      let msg = "Hi " + user.firstName + " welcome to the elo system";
+      APIFacebook.postComment(value.post_id, msg);
    });
   });
 }
 
-function handleResult(msg){
+function handleResult(value){
+  let msg = value.message;
   let match = msg.match(/!result\s(.*?)def\s(.*)/);
   let winner = match[1];
   let loser = match[2];
-  API.submitResult(winner, loser, () =>{
-    console.log("Result Submited");
+  APIBackend.submitResult(winner, loser, (response) =>{
+    APIFacebook.postComment(value.post_id, response);
   });
 }
 
@@ -77,7 +84,9 @@ function handleUndo(msg, posterId){
   let match = msg.match(/!undo\s(.*?)def\s(.*)/);
   let winner = match[1];
   let loser = match[2];
-  API.undoResult(posterId, winner, loser);
+  APIBackend.undoResult(posterId, winner, loser, (response) =>{
+    APIFacebook.postComment(value.post_id, response);
+  });
 }
 
 
@@ -109,36 +118,3 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-
-
-function handleMessage(sender_psid, message) {
-  // check if it is a location message
-  console.log('handleMEssage message:', JSON.stringify(message));
-
-  //Auto Reply
-  callSendAPI(sender_psid, "This is an Automated Response: " + message);
-}
-
-function callSendAPI(sender_psid, response) {
-  // Construct the message body
-  console.log('message to be sent: ', response);
-  let request_body = {
-    "recipient": {
-      "id": sender_psid
-    },
-    "message": response
-  }
-
-  // Send the HTTP request to the Messenger Platform
-  request({
-    "url": `${FACEBOOK_GRAPH_API_BASE_URL}me/messages`,
-    "qs": { "access_token": PAGE_ACCESS_TOKEN },
-    "method": "POST",
-    "json": request_body
-  }, (err, res, body) => {
-    console.log("Message Sent Response body:", body);
-    if (err) {
-      console.error("Unable to send message:", err);
-    }
-  });
-}
