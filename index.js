@@ -36,7 +36,7 @@ app.post('/webhook', (req, res) => {
       handleResult(body.value);
     }
     else if(/!undo\s(.*?)def\s(.*)/.test(msg)){
-      handleUndo(msg, body.value.from.id)
+      handleUndo(body.value);
     }
   }
 });
@@ -80,12 +80,20 @@ function handleResult(value){
   });
 }
 
-function handleUndo(msg, posterId){
+function handleUndo(value){
+  let msg = value.message;
+  let posterId = value.from.id;
   let match = msg.match(/!undo\s(.*?)def\s(.*)/);
   let winner = match[1];
   let loser = match[2];
   APIBackend.undoResult(posterId, winner, loser, (response) =>{
-    APIFacebook.postComment(value.post_id, response);
+    try{
+     APIFacebook.postComment(value.post_id, response);
+    }catch(e){
+      console.log("Error caught posting comment");
+      console.log(e);
+
+    }
   });
 }
 

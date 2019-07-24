@@ -1,7 +1,6 @@
 const axios = require('axios');
-const BASE_URL = 'http://localhost:8088'
+const BASE_URL = 'https://elo-system-backend.herokuapp.com'
 const PAGE_ID = '1028040704061187'
-const ACCESS_TOKEN = 'EAADB2iCJOGEBAPLsrz2zBD2aUmIZA0TERGYfZAVpAdA1K9gosaf8hhSXfPZB5wNer9zNUoOjlaLotMj2c2mEXbLObbytpkesY7JDofxsV8yHrewc9lMj586TbtGqZBsoUuvZBh3L2IK4JgqgA5gZAUaMWXcSP0TocpaTHBZBZCUZCqZChvXdMSLbazGaWht86lBaUZD'
 
 var AXIOS = axios.create({
   baseURL: BASE_URL
@@ -12,7 +11,7 @@ module.exports = {
 	registerUser: function(user, callback){
 		AXIOS.post('/player', user)
 		.then(function(response){
-			console.log(response.data);
+			callback(response);
 		})
 		.catch(function (error) {
 		    console.log(error);
@@ -50,7 +49,9 @@ module.exports = {
 		}
 		AXIOS.post('/match/undo?id='+posterId, match)
 		.then(function(response){
-			callback(response.data);
+			if(response.status == '200'){
+				callback("Success");
+			}	
 		})
 		.catch(function (error) {
 			if(error.response.status == '404'){

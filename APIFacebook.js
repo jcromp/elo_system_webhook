@@ -1,7 +1,7 @@
 const axios = require('axios');
 const BASE_URL = 'https://graph.facebook.com/v3.3'
 const PAGE_ID = '1028040704061187'
-const ACCESS_TOKEN = 'EAADB2iCJOGEBAHzXbmxHBD1odpeA0VC2ovirFkuXnqm41h2o3FIcJeKKZBgAzQoga79nay1SHLxz12uiYjMjpWZBrxZAlq7MO3STSfSjmKOB7roNtf4S6tZCLNfUKWxCa5nT2E9WYrjfEAsJZAN5LHdM1EKCF2iWC6Gmy7u9cZAgZB3tqq4tEHGs2XD4Q0KpKWRFnZCt9O98AAZDZD';
+const ACCESS_TOKEN = 'EAADB2iCJOGEBAIOtZBYXTusbCG784nMMcyB16kCeFldqqZBZBRY9vtlZCVsxeBo0PjmTFZBMYU8ZA2GpH2XZBol9syIqFqMUqGos4uhl5AUVt1iS8JbP1Cl9aUDcb07mHC55abMHu4WYmEm9GKPDrZBMv4ChyfBb1gIcymAWCJuppgDZBzc15wcm1nkYreZBGltloZD'
 
 
 var AXIOS = axios.create({
@@ -35,7 +35,7 @@ module.exports = {
 	postComment: function(postId, comment){
 		AXIOS.post('/'+postId+'/comments?message='+comment+'&access_token='+ACCESS_TOKEN)
 		.then((response) => {
-			console.log(response);
+			console.log("Comment Posted: " + comment);
 		})
 		.catch(function (error) {
 		    console.log(error);
